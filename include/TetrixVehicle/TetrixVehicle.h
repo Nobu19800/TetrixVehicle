@@ -336,6 +336,10 @@ class TetrixVehicle
  private:
 	int m_fd;
 	HiTechnic_Motor_Driver *m_driver_obj;
+	double current_x;
+	double current_y;
+	double current_a;
+	coil::TimeValue last_time;
   // <rtc-template block="private_attribute">
   
   // </rtc-template>

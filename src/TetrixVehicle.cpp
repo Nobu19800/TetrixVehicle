@@ -158,6 +158,14 @@ RTC::ReturnCode_t TetrixVehicle::onActivated(RTC::UniqueId ec_id)
 
 	m_driver_obj->setMode(Mode_Power_Only, 1);
 	m_driver_obj->setMode(Mode_Power_Only, 2);
+
+	last_time = coil::gettimeofday();
+	m_target_velocity.data.vx = 0;
+	m_target_velocity.data.va = 0;
+
+	current_x = 0;
+	current_y = 0;
+	current_a = 0;
   return RTC::RTC_OK;
 }
 
@@ -190,6 +198,32 @@ RTC::ReturnCode_t TetrixVehicle::onExecute(RTC::UniqueId ec_id)
 		m_driver_obj->setSpeed(right_motor_speed,1);
 		m_driver_obj->setSpeed(left_motor_speed,2);
 	}
+
+	if(m_update_positionIn.isNew())
+	{
+		m_update_positionIn.read();
+		current_x = m_update_position.data.position.x;
+		current_y = m_update_position.data.position.y;
+		current_a = m_update_position.data.heading;
+	}
+
+	coil::TimeValue current_time = coil::gettimeofday();
+	double diff_time = (double)(current_time - last_time);
+
+	if(diff_time <= 0.5)
+	{
+		current_x += m_target_velocity.data.vx*diff_time;
+		current_a += m_target_velocity.data.va*diff_time;
+	}
+
+	m_position.data.position.x = current_x;
+	m_position.data.position.y = current_y;
+	m_position.data.heading = current_a;
+	setTimestamp(m_position);
+	m_positionOut.write();
+
+	last_time = current_time;
+
   return RTC::RTC_OK;
 }
 
